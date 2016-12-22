@@ -1,0 +1,1 @@
+curl -X POST -H "Content-Type: application/json" -d '{"id": "8284d28d-012e-4227-a122-522a2e2ed7b4", "firstname":"Sheldon", "age":23, "email":"sheldon.cooper@ucla.com", "lastname":"cooper", "city":"Passadina"}' http://localhost:8080/user

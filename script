@@ -1,0 +1,10 @@
+CREATE KEYSPACE users WITH REPLICATION = { 'class' : 'NetworkTopologyStrategy', 'datacenter1' : 1 };
+USE users;
+CREATE TABLE users (
+  id timeuuid PRIMARY KEY,
+  firstname varchar,
+  age int,
+  city varchar,
+  email varchar,
+  lastname varchar
+);
