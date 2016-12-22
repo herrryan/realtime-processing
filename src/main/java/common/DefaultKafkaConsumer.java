@@ -1,20 +1,18 @@
 package common;
 
-import kafka.consumer.Consumer;
-import kafka.consumer.ConsumerConfig;
-import kafka.consumer.ConsumerIterator;
-import kafka.consumer.KafkaStream;
-import kafka.javaapi.consumer.ConsumerConnector;
+
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.errors.WakeupException;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
 import javax.annotation.PostConstruct;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 @Configuration
@@ -33,7 +31,7 @@ public class DefaultKafkaConsumer {
     @Value("${zookeeper")
     private String zookeeper;
 
-    private ConsumerConnector consumer;
+    private Consumer consumer;
 
     public DefaultKafkaConsumer() {
 
@@ -47,19 +45,21 @@ public class DefaultKafkaConsumer {
         kafkaConsumerProps.put("zookeeper.session.timeout.ms", "500");
         kafkaConsumerProps.put("zookeeper.sync.time.ms", "250");
         kafkaConsumerProps.put("auto.commit.interval.ms", "1000");
-        consumer = Consumer.createJavaConsumerConnector(new ConsumerConfig(kafkaConsumerProps));
+        consumer = new KafkaConsumer(kafkaConsumerProps);
     }
-
+    //https://www.confluent.io/blog/tutorial-getting-started-with-the-new-apache-kafka-0-9-consumer-client/
     public void receive(String value) throws ExecutionException, InterruptedException {
-        Map<String, Integer> message = new HashMap<>();
-        message.put(topic, 1);
-        Map<String, List<KafkaStream<byte[], byte[]>>> consumerStreams = consumer.createMessageStreams(message);
-        List<KafkaStream<byte[], byte[]>> streams = consumerStreams.get(topic);
-        for (KafkaStream stream: streams) {
-            ConsumerIterator<byte[], byte[]> it = stream.iterator();
-            while (it.hasNext()) {
-                System.out.println("Message: " + new String(it.next().message()));
+        consumer.subscribe(Arrays.asList(topic));
+        try {
+            while (true) {
+                ConsumerRecords<String, String> records = consumer.poll(Long.MAX_VALUE);
+                for (ConsumerRecord<String, String> record : records)
+                    System.out.println(record.offset() + ": " + record.value());
             }
+        } catch (WakeupException e) {
+            // ignore for shutdown
+        } finally {
+            consumer.close();
         }
     }
 }
