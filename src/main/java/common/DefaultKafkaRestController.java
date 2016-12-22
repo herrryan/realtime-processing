@@ -1,6 +1,5 @@
 package common;
 
-import com.datastax.driver.core.utils.UUIDs;
 import model.User;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
